@@ -4,7 +4,7 @@ import asyncio
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from sqlalchemy import inspect, text
+from sqlalchemy import text
 from alembic import context
 
 from app.config import settings
@@ -25,14 +25,23 @@ def ensure_version_column_width(connection: Connection) -> None:
     if connection.dialect.name != "postgresql":
         return
 
-    with connection.begin():
-        inspector = inspect(connection)
-        if not inspector.has_table("alembic_version"):
-            return
-
-        connection.execute(
-            text("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)")
+    # Alembic's default version_num column is VARCHAR(32), but this project
+    # uses descriptive revision IDs longer than 32 chars. On fresh Railway
+    # databases, create the version table with a wider column before Alembic
+    # creates its default table.
+    connection.execute(
+        text(
+            """
+            CREATE TABLE IF NOT EXISTS alembic_version (
+                version_num VARCHAR(255) NOT NULL,
+                CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
+            )
+            """
         )
+    )
+    connection.execute(
+        text("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)")
+    )
 
 
 def run_migrations_offline():

@@ -211,11 +211,14 @@ Risk: Unknown / needs inspection
 
 Changed:
 - Added an Alembic migration after `0010` that creates `course_lessons`, `course_progress`, and `course_attempts` before later course workflow migrations alter them.
+- Alembic now creates/widens `alembic_version.version_num` to `VARCHAR(255)` before migrations run.
 
 Why:
 - Fresh Railway Postgres databases were failing deploy at `0011_add_course_workflow_fields` because `course_progress` did not exist yet.
+- Fresh Railway databases also failed at long descriptive revision IDs because Alembic's default version column is `VARCHAR(32)`.
 
 Files touched:
+- `alembic/env.py`
 - `alembic/versions/0010a_create_course_tables.py`
 - `alembic/versions/0011_add_course_workflow_fields.py`
 
