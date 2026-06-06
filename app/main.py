@@ -180,6 +180,11 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/miniapp-assets/onehsk-theme.jpeg")
+async def onehsk_theme_asset():
+    return FileResponse("app/static/assets/onehsk-theme.jpeg", media_type="image/jpeg")
+
+
 @app.get("/hsk3.html")
 async def hsk3_miniapp():
     return FileResponse("app/static/hsk3.html")

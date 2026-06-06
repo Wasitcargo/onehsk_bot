@@ -10,33 +10,36 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{
-  --bg:#0c0e14;--bg2:#141820;--bg3:#1c2030;--bg4:#242840;
-  --border:#252a3a;--border2:#333a52;
-  --text:#e8eaf0;--text2:#8b91aa;--text3:#4a5070;
-  --accent:#4f7fff;--accent-dim:rgba(79,127,255,.12);
-  --green:#2bcf72;--green-dim:rgba(43,207,114,.12);
-  --amber:#f5a623;--amber-dim:rgba(245,166,35,.12);
-  --red:#e84545;--red-dim:rgba(232,69,69,.12);
-  --purple:#9b6dff;--purple-dim:rgba(155,109,255,.12);
+  --bg:#060606;--bg2:rgba(17,14,10,.9);--bg3:#1b1510;--bg4:#21180f;
+  --border:rgba(217,166,74,.22);--border2:rgba(217,166,74,.34);
+  --text:#f5ead8;--text2:#c8ad7a;--text3:#7f6e55;
+  --accent:#d9a64a;--accent-dim:rgba(217,166,74,.16);
+  --green:#46c486;--green-dim:rgba(70,196,134,.13);
+  --amber:#f0b65c;--amber-dim:rgba(240,182,92,.15);
+  --red:#d85849;--red-dim:rgba(216,88,73,.14);
+  --purple:#b6463d;--purple-dim:rgba(182,70,61,.14);
+  --hero:url("/miniapp-assets/onehsk-theme.jpeg");
   --r:10px;--r2:16px;
   --font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'SF Mono','Fira Code',ui-monospace,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overscroll-behavior:none;}
+html,body{height:100%;background:#060606;color:var(--text);font-family:var(--font);overscroll-behavior:none;}
 body{overflow:hidden;}
 button,input,textarea{font:inherit;}
 button:disabled{cursor:default;}
 
 .page{
   position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  display:none;background:var(--bg);
+  display:none;background:linear-gradient(180deg,rgba(0,0,0,.66),rgba(6,6,6,.94)),var(--hero);
+  background-size:cover;background-position:center top;
 }
 .page.active{display:block;}
 .shell{width:100%;max-width:680px;margin:0 auto;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));}
 .page-header{
   padding:calc(22px + env(safe-area-inset-top,0px)) 16px 16px;
-  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  background:linear-gradient(180deg,rgba(15,11,6,.97),rgba(7,7,6,.86));
+  border-bottom:1px solid rgba(217,166,74,.12);backdrop-filter:blur(16px);
   position:sticky;top:0;z-index:10;
 }
 .topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
@@ -45,9 +48,9 @@ button:disabled{cursor:default;}
 .lesson-pill{
   font-family:var(--mono);font-size:10px;white-space:nowrap;
   color:var(--accent);background:var(--accent-dim);
-  border:1px solid rgba(79,127,255,.25);border-radius:20px;padding:4px 10px;
+  border:1px solid rgba(217,166,74,.28);border-radius:20px;padding:4px 10px;
 }
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;box-shadow:0 16px 36px rgba(0,0,0,.28);}
 .mini-note{
   margin:0 16px 12px;padding:12px 14px;border-radius:var(--r);
   border:1px solid var(--border);background:var(--bg2);
@@ -57,14 +60,14 @@ button:disabled{cursor:default;}
 .quiz-wrap{padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));}
 .start-card{text-align:center;}
 .start-kicker{
-  color:var(--purple);background:var(--purple-dim);border:1px solid rgba(155,109,255,.24);
+  color:var(--purple);background:var(--purple-dim);border:1px solid rgba(182,70,61,.24);
   display:inline-flex;border-radius:20px;padding:4px 10px;font-family:var(--mono);font-size:10px;margin-bottom:14px;
 }
 .start-title{font-size:24px;font-weight:700;margin-bottom:6px;}
 .start-sub{font-size:13px;color:var(--text3);line-height:1.45;margin-bottom:16px;}
 .word-preview{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;}
 .word-chip{
-  border:1px solid var(--border);background:var(--bg);border-radius:20px;
+  border:1px solid var(--border);background:rgba(6,6,6,.68);border-radius:20px;
   color:var(--text2);font-size:12px;padding:5px 9px;
 }
 .quiz-main{display:none;}
@@ -92,7 +95,7 @@ button:disabled{cursor:default;}
 .quiz-fb.ok{background:var(--green-dim);border:1px solid rgba(43,207,114,.3);color:var(--green);}
 .quiz-fb.no{background:var(--red-dim);border:1px solid rgba(232,69,69,.3);color:#f07070;}
 .quiz-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
-.quiz-score-box{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;text-align:center;}
+.quiz-score-box{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;text-align:center;box-shadow:0 16px 36px rgba(0,0,0,.28);}
 .quiz-score-num{font-family:var(--mono);font-size:44px;font-weight:700;}
 .quiz-score-pct{font-size:13px;color:var(--text3);margin-top:4px;}
 .result-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;text-align:left;}
@@ -101,13 +104,13 @@ button:disabled{cursor:default;}
 .result-item b{color:var(--text);font-weight:600;}
 
 .homework-wrap{padding:16px 16px calc(26px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;}
-.hw-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
+.hw-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;box-shadow:0 14px 32px rgba(0,0,0,.25);}
 .hw-title{font-size:14px;font-weight:650;margin-bottom:6px;}
 .hw-help{font-size:12px;color:var(--text3);line-height:1.45;margin-bottom:10px;}
 .hw-task{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:10px;}
 .hw-textarea{
   width:100%;min-height:116px;resize:vertical;border-radius:var(--r);
-  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  border:1px solid var(--border);background:rgba(6,6,6,.68);color:var(--text);
   padding:12px;font-size:14px;line-height:1.5;outline:none;
 }
 .hw-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
@@ -131,7 +134,7 @@ button:disabled{cursor:default;}
   transition:all .15s;display:flex;align-items:center;gap:6px;justify-content:center;
 }
 .btn:active{transform:scale(.98);}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary{background:linear-gradient(135deg,#f2c76d,#b87524);color:#130e07;border-color:var(--accent);box-shadow:0 10px 24px rgba(217,166,74,.22);}
 .btn-full{width:100%;}
 .btn-grow{flex:1 1 160px;}
 
@@ -267,6 +270,8 @@ const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
+  tg.setHeaderColor?.("#070604");
+  tg.setBackgroundColor?.("#060606");
 }
 
 const UI = {
