@@ -207,6 +207,24 @@ Risk: Unknown / needs inspection
 
 ## 10. Recent Important Changes
 
+### 2026-06-07 — Course table migration bootstrap
+
+Changed:
+- Added an Alembic migration after `0010` that creates `course_lessons`, `course_progress`, and `course_attempts` before later course workflow migrations alter them.
+
+Why:
+- Fresh Railway Postgres databases were failing deploy at `0011_add_course_workflow_fields` because `course_progress` did not exist yet.
+
+Files touched:
+- `alembic/versions/0010a_create_course_tables.py`
+- `alembic/versions/0011_add_course_workflow_fields.py`
+
+Risk:
+- Existing databases already at head will not rerun this inserted migration. Fresh or partially failed databases at `0010` can continue to `head`.
+
+Follow-up:
+- Redeploy Railway web service and confirm `alembic upgrade head` reaches `0035_partner_payout_safety`.
+
 ### 2026-06-06 — Feedback limit discount offer
 
 Changed:

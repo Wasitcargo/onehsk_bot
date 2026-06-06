@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = "0011_add_course_workflow_fields"
-down_revision = "0010"
+down_revision = "0010a_create_course_tables"
 branch_labels = None
 depends_on = None
 
