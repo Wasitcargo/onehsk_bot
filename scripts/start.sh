@@ -17,12 +17,13 @@ fi
 echo "Alembic current output:"
 echo "$CURRENT"
 
-# Empty databases must migrate from base. Existing unversioned schemas must fail
-# during upgrade and be reconciled explicitly after review.
+# Empty databases migrate from base. Existing unversioned schemas are reconciled
+# before upgrade so Alembic does not try to recreate tables that already exist.
 if echo "$CURRENT" | grep -qE "^[0-9a-f]|[0-9]{4}_"; then
     echo "Revision found in DB — running upgrade head normally."
 else
-    echo "No revision ID detected. Running upgrade head from base without stamping."
+    echo "No revision ID detected. Checking for existing unversioned schema."
+    python -m scripts.recover_unversioned_schema
 fi
 
 echo "=== Running alembic upgrade head ==="

@@ -18,14 +18,31 @@ async_session_maker = async_sessionmaker(
 # Backward-compatible alias for older middleware and seed scripts.
 SessionLocal = async_session_maker
 
-from app.db.base import Base
-
 _BOOTSTRAP_COLUMNS: dict[str, dict[str, str]] = {
     "users": {
-        "pending_checkout_msg_id": "INTEGER",
-        "voice_mode": "VARCHAR(20) DEFAULT 'none' NOT NULL",
         "username": "VARCHAR(64)",
+        "payment_method": "VARCHAR",
+        "voice_mode": "VARCHAR(20) DEFAULT 'none' NOT NULL",
+        "bonus_questions_used": "INTEGER DEFAULT 0 NOT NULL",
+        "referral_code": "VARCHAR(64)",
+        "referred_by_telegram_id": "BIGINT",
+        "start_date": "TIMESTAMP WITH TIME ZONE",
+        "end_date": "TIMESTAMP WITH TIME ZONE",
+        "discount_offer_started_at": "TIMESTAMP WITH TIME ZONE",
+        "discount_referral_count": "INTEGER DEFAULT 0 NOT NULL",
+        "discount_eligible": "BOOLEAN DEFAULT false NOT NULL",
+        "discount_used": "BOOLEAN DEFAULT false NOT NULL",
         "referral_trial_count_started_at": "TIMESTAMP WITH TIME ZONE",
+        "referral_trial_progress_chat_id": "BIGINT",
+        "referral_trial_progress_message_id": "BIGINT",
+        "last_limit_reset_at": "TIMESTAMP WITH TIME ZONE",
+        "daily_limit_offer_sent_at": "TIMESTAMP WITH TIME ZONE",
+        "discount_progress_chat_id": "BIGINT",
+        "discount_progress_message_id": "BIGINT",
+        "selected_plan_type": "VARCHAR(32)",
+        "pending_checkout_msg_id": "INTEGER",
+        "expiry_reminder_sent_at": "TIMESTAMP WITH TIME ZONE",
+        "course_promo_sent": "BOOLEAN DEFAULT false NOT NULL",
     },
     "payments": {
         "checkout_msg_id": "INTEGER",
@@ -119,10 +136,18 @@ _BOOTSTRAP_COLUMNS: dict[str, dict[str, str]] = {
 }
 
 
+async def _has_table(conn, table_name: str) -> bool:
+    return await conn.run_sync(
+        lambda sync_conn, table_name=table_name: inspect(sync_conn).has_table(table_name)
+    )
+
+
 async def _ensure_bootstrap_columns(conn) -> None:
-    # `create_all()` creates missing tables but does not add new columns to
-    # existing tables, so we patch legacy Railway databases here.
+    # Alembic owns schema creation. These patches only keep older Railway
+    # schemas bootable if they were created before all migrations existed.
     for table_name, columns in _BOOTSTRAP_COLUMNS.items():
+        if not await _has_table(conn, table_name):
+            continue
         existing_columns = await conn.run_sync(
             lambda sync_conn, table_name=table_name: {
                 column["name"]
@@ -142,6 +167,8 @@ async def _ensure_bootstrap_columns(conn) -> None:
 
 
 async def _ensure_bootstrap_indexes(conn) -> None:
+    if not await _has_table(conn, "partner_payouts"):
+        return
     await conn.execute(
         text(
             """
@@ -155,6 +182,5 @@ async def _ensure_bootstrap_indexes(conn) -> None:
 
 async def init_db():
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
         await _ensure_bootstrap_columns(conn)
         await _ensure_bootstrap_indexes(conn)
