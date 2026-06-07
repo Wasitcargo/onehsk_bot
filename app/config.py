@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     ADMIN_IDS: str = "7965751363"
     PAYMENT_DETAILS: str = ""
     BOT_USERNAME: str = ""
-    MINI_APP_BASE_URL: str = "https://telegram-chinese-bot-production.up.railway.app/hsk3.html"
+    MINI_APP_BASE_URL: str = "https://telegram-chinese-bot-production.up.railway.app/study.html"
 
     DEFAULT_LANGUAGE: str = "tj"
     LOG_LEVEL: str = "INFO"

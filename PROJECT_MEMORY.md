@@ -207,6 +207,27 @@ Risk: Unknown / needs inspection
 
 ## 10. Recent Important Changes
 
+### 2026-06-07 — Study Mini App uses backend user level
+
+Changed:
+- Default Mini App base URL now points to `study.html` instead of fixed `hsk3.html`.
+- `study.html` now calls same-origin miniapp APIs and uses backend access payload level/language before query params or local cache.
+
+Why:
+- The old fixed HSK3 Mini App URL and frontend init priority could keep users on the wrong level even when their DB user level was different.
+
+Files touched:
+- `app/config.py`
+- `.env.example`
+- `app/bot/utils/course_miniapp.py`
+- `app/static/study.html`
+
+Risk:
+- Existing deployed env or BotFather menu URL can still point to `hsk3.html`; update them to `/study.html`.
+
+Follow-up:
+- After deploy, open Mini App as HSK1/HSK2/HSK3/HSK4 test users and confirm `/api/miniapp/access` level wins.
+
 ### 2026-06-07 — Course table migration bootstrap
 
 Changed:
