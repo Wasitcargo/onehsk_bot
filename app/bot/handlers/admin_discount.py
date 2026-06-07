@@ -30,6 +30,9 @@ from app.repositories.discount_campaign_repo import DiscountCampaignRepository
 from app.repositories.user_repo import UserRepository
 from app.services.discount_notification_service import DiscountNotificationService
 from app.services.discount_translation_service import DiscountTranslationService
+from app.services.payment_qr_service import PaymentQrService, QR_PAYMENT_METHODS
+from app.services.subscription_currency_service import format_subscription_price
+from app.services.subscription_price_service import PLANS, SubscriptionPriceService
 
 router = Router()
 
@@ -107,6 +110,93 @@ def _fmt_notify(data: dict) -> str:
 
 def _cancel_keyboard_for(data: dict):
     return discount_edit_back_keyboard() if data.get(_EDIT_MODE) else discount_cancel_keyboard()
+
+
+def _message_image_file_id(message: Message) -> str | None:
+    if message.photo:
+        return message.photo[-1].file_id
+    document = getattr(message, "document", None)
+    if document and (document.mime_type or "").startswith("image/"):
+        return document.file_id
+    return None
+
+
+def _selected_qr_methods(payment_method: Optional[str]) -> list[str]:
+    if payment_method in QR_PAYMENT_METHODS:
+        return [payment_method]
+    if payment_method is None:
+        return list(QR_PAYMENT_METHODS)
+    return []
+
+
+def _selected_plans(plan_type: Optional[str]) -> list[str]:
+    if plan_type in PLANS:
+        return [plan_type]
+    return list(PLANS)
+
+
+async def _missing_discount_qr_uploads(session, data: dict) -> list[dict]:
+    percent = int(data.get("percent") or 0)
+    if percent <= 0:
+        return []
+
+    qr_service = PaymentQrService(session)
+    price_service = SubscriptionPriceService(session)
+    uploads = []
+    seen = set()
+
+    for method in _selected_qr_methods(data.get("payment_method")):
+        for plan in _selected_plans(data.get("plan_type")):
+            price = await price_service.get_price(method, plan)
+            if not price:
+                continue
+            final_amount = qr_service.calculate_discounted_amount(price.amount, percent)
+            if await qr_service.has_checkout_qr(
+                payment_method=method,
+                plan_type=plan,
+                amount=final_amount,
+                currency=price.currency,
+                discount_percent=percent,
+            ):
+                continue
+
+            key = (method, price.currency, final_amount)
+            if key in seen:
+                continue
+            seen.add(key)
+            uploads.append(
+                {
+                    "payment_method": method,
+                    "plan_type": plan,
+                    "base_amount": price.amount,
+                    "amount": final_amount,
+                    "currency": price.currency,
+                    "discount_percent": percent,
+                }
+            )
+    return uploads
+
+
+def _discount_qr_prompt(upload: dict, index: int, total: int, error: Optional[str] = None) -> str:
+    method = _label("payment", upload["payment_method"])
+    plan = _label("plan", upload["plan_type"])
+    base = format_subscription_price(int(upload["base_amount"]), upload["currency"])
+    final = format_subscription_price(int(upload["amount"]), upload["currency"])
+    lines = [
+        "📱 <b>Chegirma uchun QR kod kerak</b>",
+        "",
+        f"To'lov: <b>{method}</b>",
+        f"Tarif: <b>{plan}</b>",
+        f"Chegirma: <b>{upload['discount_percent']}%</b>",
+        f"Asosiy narx: <b>{base}</b>",
+        f"To'lanadigan narx: <b>{final}</b>",
+        f"QR: <b>{index}/{total}</b>",
+        "",
+        "Shu to'lanadigan narxga mos QR kod rasmini yuboring.",
+    ]
+    if error:
+        lines.extend(["", f"⚠️ {escape(error)}"])
+    return "\n".join(lines)
 
 
 def _wizard_text(data: dict, prompt: str, error: Optional[str] = None) -> str:
@@ -1016,6 +1106,20 @@ async def discount_confirm(callback: CallbackQuery, state: FSMContext, session):
     if ends_at <= now:
         await callback.answer("Bu chegirma muddati allaqachon tugagan. Boshlanish yoki muddatni o'zgartiring.", show_alert=True)
         return
+
+    missing_qrs = await _missing_discount_qr_uploads(session, data)
+    if missing_qrs:
+        await state.update_data(discount_qr_uploads=missing_qrs, discount_qr_index=0)
+        await state.set_state(DiscountStates.waiting_payment_qr)
+        await callback.answer("Alipay/WeChat QR kod kerak", show_alert=True)
+        await _edit_callback_panel(
+            callback,
+            state,
+            _discount_qr_prompt(missing_qrs[0], 1, len(missing_qrs)),
+            discount_cancel_keyboard(),
+        )
+        return
+
     title_i18n = await _prepare_title_i18n(data)
     data.update(title_i18n)
     await state.update_data(**title_i18n)
@@ -1071,6 +1175,68 @@ async def discount_confirm(callback: CallbackQuery, state: FSMContext, session):
         f"Ishga tushish: {starts_at.astimezone(ADMIN_TZ):%Y-%m-%d %H:%M}\n"
         f"{notify_line}",
         reply_markup=None,
+    )
+
+
+@router.message(StateFilter(DiscountStates.waiting_payment_qr))
+async def discount_payment_qr(message: Message, state: FSMContext, session):
+    if not _is_admin(message.from_user.id):
+        return
+
+    data = await state.get_data()
+    uploads = data.get("discount_qr_uploads") or []
+    index = int(data.get("discount_qr_index") or 0)
+    if not uploads or index >= len(uploads):
+        await _delete_admin_input(message)
+        await _edit_stored_panel(message, state, "❌ QR jarayoni topilmadi. Chegirmani qayta tasdiqlang.")
+        await state.set_state(None)
+        return
+
+    current = uploads[index]
+    file_id = _message_image_file_id(message)
+    if not file_id:
+        await _delete_admin_input(message)
+        await _edit_stored_panel(
+            message,
+            state,
+            _discount_qr_prompt(
+                current,
+                index + 1,
+                len(uploads),
+                "Faqat QR rasm qabul qilinadi. Foto yoki image-fayl yuboring.",
+            ),
+            discount_cancel_keyboard(),
+        )
+        return
+
+    await PaymentQrService(session).set_dynamic_file_id(
+        payment_method=current["payment_method"],
+        amount=int(current["amount"]),
+        currency=current["currency"],
+        file_id=file_id,
+    )
+    await session.commit()
+    await _delete_admin_input(message)
+
+    index += 1
+    if index < len(uploads):
+        await state.update_data(discount_qr_index=index)
+        await _edit_stored_panel(
+            message,
+            state,
+            _discount_qr_prompt(uploads[index], index + 1, len(uploads)),
+            discount_cancel_keyboard(),
+        )
+        return
+
+    await state.update_data(discount_qr_uploads=None, discount_qr_index=None)
+    await state.set_state(None)
+    data = await state.get_data()
+    await _edit_stored_panel(
+        message,
+        state,
+        "✅ QR kodlar saqlandi.\n\n" + _preview(data),
+        discount_confirm_keyboard(),
     )
 
 

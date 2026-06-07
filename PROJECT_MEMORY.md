@@ -207,6 +207,33 @@ Risk: Unknown / needs inspection
 
 ## 10. Recent Important Changes
 
+### 2026-06-07 — Alipay/WeChat QR codes follow custom prices
+
+Changed:
+- Alipay/WeChat checkout now resolves QR codes by payment method, final amount, currency, plan, and discount percent.
+- Default static QR images are used only for the built-in default prices and their built-in 20% discount prices.
+- Custom Alipay/WeChat QR `file_id`s are stored in `bot_settings` with `payment_qr:{method}:{currency}:{amount}` keys.
+- Admin price changes for Alipay/WeChat now always require QR uploads for the new base price and its 20% discount price before saving, unless the admin is returning to the built-in default static QR prices.
+- Admin discount campaigns that target Alipay/WeChat require QR uploads for every affected discounted amount before campaign confirmation.
+
+Why:
+- Fixed-amount Alipay/WeChat QR images can show the wrong old amount after admin changes subscription prices or creates custom discount campaigns.
+
+Files touched:
+- `app/services/payment_qr_service.py`
+- `app/bot/handlers/admin.py`
+- `app/bot/handlers/admin_discount.py`
+- `app/bot/handlers/subscription.py`
+- `app/bot/fsm/admin_management.py`
+- `app/bot/fsm/admin_discount.py`
+- `app/bot/utils/i18n.py`
+
+Risk:
+- Existing custom Alipay/WeChat prices created before this change may not have matching QR file IDs; re-save those prices in admin panel to upload fresh base and 20% QR codes.
+
+Follow-up:
+- Smoke test in Telegram: change Alipay/WeChat price, upload base and 20% QR photos, then verify normal, referral/feedback 20%, and admin campaign checkout show the matching QR.
+
 ### 2026-06-07 — Study Mini App uses backend user level
 
 Changed:

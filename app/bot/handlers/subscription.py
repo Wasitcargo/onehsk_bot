@@ -1,4 +1,3 @@
-from pathlib import Path
 from datetime import datetime, timezone
 
 from aiogram import Router, F
@@ -10,6 +9,7 @@ from app.repositories.bot_feedback_repo import BotFeedbackRepository
 from app.repositories.user_repo import UserRepository
 from app.services.discount_service import DiscountService
 from app.services.payment_service import PaymentService
+from app.services.payment_qr_service import PaymentQrService
 from app.services.subscription_currency_service import (
     SubscriptionCurrencyService,
     format_subscription_price,
@@ -33,22 +33,6 @@ from app.bot.keyboards.checkout import checkout_keyboard
 router = Router()
 PAYMENT_METHODS = ("visa", "alipay", "wechat")
 PLANS = ("10_days", "1_month")
-
-# subscription.py → bot/handlers/ → bot/ → app/ → project root → app/static/payments/
-_STATIC_PAYMENTS = Path(__file__).parent.parent.parent / "static" / "payments"
-
-QR_PHOTO_PATHS = {
-    "alipay_10_days":          str(_STATIC_PAYMENTS / "alipay_10_days.jpg"),
-    "alipay_10_days_discount": str(_STATIC_PAYMENTS / "alipay_10_days_discount.jpg"),
-    "alipay_1_month":          str(_STATIC_PAYMENTS / "alipay_1_month.jpg"),
-    "alipay_1_month_discount": str(_STATIC_PAYMENTS / "alipay_1_month_discount.jpg"),
-    "wechat_10_days":          str(_STATIC_PAYMENTS / "wechat_10_days.jpg"),
-    "wechat_10_days_discount": str(_STATIC_PAYMENTS / "wechat_10_days_discount.jpg"),
-    "wechat_1_month":          str(_STATIC_PAYMENTS / "wechat_1_month.jpg"),
-    "wechat_1_month_discount": str(_STATIC_PAYMENTS / "wechat_1_month_discount.jpg"),
-    "alipay_admin_discount":    str(_STATIC_PAYMENTS / "alipay_admin_discount.jpg"),
-    "wechat_admin_discount":    str(_STATIC_PAYMENTS / "wechat_admin_discount.jpg"),
-}
 
 
 def _parse_campaign_id(value: str | None) -> int | None:
@@ -1294,15 +1278,15 @@ async def _show_checkout(callback: CallbackQuery, user_repo: UserRepository, use
     checkout_msg_id: int | None = None
 
     if checkout_info["currency"] == "¥":
-        if checkout_info.get("discount_source") == "admin_campaign":
-            qr_key = f"{user.payment_method}_admin_discount"
-        else:
-            qr_key = f"{user.payment_method}_{plan}"
-            if checkout_info.get("discount_applied"):
-                qr_key += "_discount"
-        photo_path = QR_PHOTO_PATHS.get(qr_key)
-        if photo_path:
-            photo = FSInputFile(photo_path)
+        qr = await PaymentQrService(user_repo.session).get_checkout_qr(
+            payment_method=user.payment_method,
+            plan_type=plan,
+            amount=checkout_info["final_amount"],
+            currency=checkout_info["currency"],
+            discount_percent=checkout_info.get("discount_percent", 0),
+        )
+        if qr:
+            photo = qr.file_id if qr.file_id else FSInputFile(qr.file_path)
             try:
                 await callback.message.delete()
             except Exception:
@@ -1315,8 +1299,14 @@ async def _show_checkout(callback: CallbackQuery, user_repo: UserRepository, use
             )
             checkout_msg_id = sent.message_id
         else:
+            missing_text = (
+                f"{t('payment_qr_missing', lang)}\n\n"
+                f"📦 <b>{_plan_label(plan, lang)}</b>\n"
+                f"💵 {t('subscription_price_label', lang)}: "
+                f"<b>{format_subscription_price(checkout_info['final_amount'], checkout_info['currency'])}</b>"
+            )
             sent = await callback.message.edit_text(
-                text,
+                missing_text,
                 reply_markup=keyboard,
                 parse_mode="HTML",
                 disable_web_page_preview=True,

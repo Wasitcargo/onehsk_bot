@@ -32,6 +32,7 @@ from app.services.subscription_currency_service import (
     SubscriptionCurrencyService,
     format_subscription_price,
 )
+from app.services.payment_qr_service import PaymentQrService, QR_PAYMENT_METHODS
 from app.services.subscription_price_service import PAYMENT_METHODS, PLANS, SubscriptionPriceService
 from app.bot.handlers.admin_broadcast import open_broadcast_panel_for_callback
 from app.bot.utils.workflow_message import (
@@ -282,6 +283,63 @@ def _method_label(method: str) -> str:
 
 def _plan_label_admin(plan: str) -> str:
     return {"10_days": "10 kun", "1_month": "1 oy"}.get(plan, plan)
+
+
+async def _required_price_qr_uploads(session, method: str, plan: str, amount: int) -> list[dict]:
+    if method not in QR_PAYMENT_METHODS:
+        return []
+
+    service = PaymentQrService(session)
+    uploads = []
+    for percent, label in ((0, "asosiy narx"), (20, "20% chegirma narxi")):
+        final_amount = amount if percent == 0 else service.calculate_discounted_amount(amount, percent)
+        if service.static_qr_path(
+            payment_method=method,
+            plan_type=plan,
+            amount=final_amount,
+            discount_percent=percent,
+        ):
+            continue
+        uploads.append(
+            {
+                "payment_method": method,
+                "plan_type": plan,
+                "amount": final_amount,
+                "currency": "¥",
+                "discount_percent": percent,
+                "label": label,
+            }
+        )
+    return uploads
+
+
+def _price_qr_prompt(upload: dict, index: int, total: int, error: str | None = None) -> str:
+    method = _method_label(upload["payment_method"])
+    plan = _plan_label_admin(upload["plan_type"])
+    price = format_subscription_price(int(upload["amount"]), upload["currency"])
+    lines = [
+        "📱 <b>QR kod kerak</b>",
+        "",
+        f"Usul: <b>{method}</b>",
+        f"Tarif: <b>{plan}</b>",
+        f"Turi: <b>{escape(str(upload['label']))}</b>",
+        f"Narx: <b>{price}</b>",
+        f"QR: <b>{index}/{total}</b>",
+        "",
+        "Shu narxga mos QR kod rasmini yuboring.",
+    ]
+    if error:
+        lines.extend(["", f"⚠️ {escape(error)}"])
+    return "\n".join(lines)
+
+
+def _message_image_file_id(message: Message) -> str | None:
+    if message.photo:
+        return message.photo[-1].file_id
+    document = getattr(message, "document", None)
+    if document and (document.mime_type or "").startswith("image/"):
+        return document.file_id
+    return None
 
 
 async def _prices_text(session) -> str:
@@ -948,6 +1006,24 @@ async def admin_price_amount_handler(message: Message, state: FSMContext, sessio
     data = await state.get_data()
     method = data.get("price_method")
     plan = data.get("price_plan")
+
+    qr_uploads = await _required_price_qr_uploads(session, method, plan, amount)
+    if qr_uploads:
+        await state.update_data(
+            price_amount=amount,
+            price_qr_uploads=qr_uploads,
+            price_qr_index=0,
+        )
+        await state.set_state(AdminPriceStates.waiting_qr)
+        await delete_message_safely(message)
+        await _edit_admin_flow_message(
+            message,
+            state,
+            _price_qr_prompt(qr_uploads[0], 1, len(qr_uploads)),
+            reply_markup=admin_back_keyboard(),
+        )
+        return
+
     price = await SubscriptionPriceService(session).set_price(
         payment_method=method,
         plan_type=plan,
@@ -964,6 +1040,83 @@ async def admin_price_amount_handler(message: Message, state: FSMContext, sessio
         message,
         state,
         f"✅ Narx yangilandi: <b>{_method_label(price.payment_method)} · "
+        f"{_plan_label_admin(price.plan_type)} = "
+        f"{format_subscription_price(price.amount, price.currency)}</b>",
+        reply_markup=prices_keyboard(),
+    )
+    await state.clear()
+
+
+@router.message(StateFilter(AdminPriceStates.waiting_qr))
+async def admin_price_qr_handler(message: Message, state: FSMContext, session):
+    if not _is_admin(message.from_user.id):
+        return
+
+    data = await state.get_data()
+    uploads = data.get("price_qr_uploads") or []
+    index = int(data.get("price_qr_index") or 0)
+    if not uploads or index >= len(uploads):
+        await delete_message_safely(message)
+        await _edit_admin_flow_message(message, state, "❌ QR jarayoni topilmadi. Narxni qayta kiriting.")
+        await state.clear()
+        return
+
+    file_id = _message_image_file_id(message)
+    current = uploads[index]
+    if not file_id:
+        await delete_message_safely(message)
+        await _edit_admin_flow_message(
+            message,
+            state,
+            _price_qr_prompt(
+                current,
+                index + 1,
+                len(uploads),
+                "Faqat QR rasm qabul qilinadi. Foto yoki image-fayl yuboring.",
+            ),
+            reply_markup=admin_back_keyboard(),
+        )
+        return
+
+    await PaymentQrService(session).set_dynamic_file_id(
+        payment_method=current["payment_method"],
+        amount=int(current["amount"]),
+        currency=current["currency"],
+        file_id=file_id,
+    )
+    await session.commit()
+    await delete_message_safely(message)
+
+    index += 1
+    if index < len(uploads):
+        await state.update_data(price_qr_index=index)
+        await _edit_admin_flow_message(
+            message,
+            state,
+            _price_qr_prompt(uploads[index], index + 1, len(uploads)),
+            reply_markup=admin_back_keyboard(),
+        )
+        return
+
+    method = data.get("price_method")
+    plan = data.get("price_plan")
+    amount = int(data.get("price_amount") or 0)
+    price = await SubscriptionPriceService(session).set_price(
+        payment_method=method,
+        plan_type=plan,
+        amount=amount,
+        updated_by_telegram_id=message.from_user.id,
+    )
+    if not price:
+        await _edit_admin_flow_message(message, state, "❌ Narx saqlanmadi. Tarif noto'g'ri.")
+        await state.clear()
+        return
+
+    await session.commit()
+    await _edit_admin_flow_message(
+        message,
+        state,
+        f"✅ Narx va QR kodlar yangilandi: <b>{_method_label(price.payment_method)} · "
         f"{_plan_label_admin(price.plan_type)} = "
         f"{format_subscription_price(price.amount, price.currency)}</b>",
         reply_markup=prices_keyboard(),

@@ -128,6 +128,7 @@ TEXTS = {
       
         "payment_details_label": "Реквизити пардохт",
         "payment_invalid_plan": "Тарифи интихобшуда нодуруст аст.",
+        "payment_qr_missing": "⚠️ Барои ин нарх QR-код ҳоло танзим нашудааст. Лутфан тарифи дигарро интихоб кунед ё баъдтар кӯшиш кунед.",
         "payment_send_screenshot": "Бад аз пардохт скриншоти фиристед.",
         "payment_pending_created": "Дархости пардохт сабт шуд.",
         "payment_waiting_review": "Пас аз санҷиш обунаи шумо фаъол карда мешавад.",
@@ -282,6 +283,7 @@ TEXTS = {
         
         "payment_details_label": "Реквизиты для оплаты",
         "payment_invalid_plan": "Выбран неверный тариф.",
+        "payment_qr_missing": "⚠️ QR-код для этой цены пока не настроен. Выберите другой тариф или попробуйте позже.",
         "payment_send_screenshot": "После оплаты отправьте скриншот.",
         "payment_pending_created": "Запрос на оплату создан.",
         "payment_waiting_review": "После проверки ваша подписка будет активирована.",
@@ -432,6 +434,7 @@ TEXTS = {
 
         "payment_details_label": "To‘lov rekviziti",   
         "payment_invalid_plan": "Tanlangan tarif noto‘g‘ri.",
+        "payment_qr_missing": "⚠️ Bu narx uchun QR kod hali sozlanmagan. Boshqa tarifni tanlang yoki keyinroq urinib ko'ring.",
         "payment_send_screenshot": "To‘lov qlib bo'lgach skrinshotini yuboring.",
         "payment_pending_created": "To‘lov so‘rovi yaratildi.",
         "payment_waiting_review": "Tekshiruvdan keyin obunangiz faollashtiriladi.",
