@@ -722,7 +722,7 @@ Required:
 - `ADMIN_IDS`
 
 Optional:
-- Unknown / needs inspection
+- `RESET_DATABASE_ON_DEPLOY=1` can be set for one Railway deploy to drop and recreate the PostgreSQL `public` schema before Alembic migrations. Use only for recovery from an unversioned/partial schema such as `DuplicateTableError: relation "users" already exists`; remove it after the successful deploy because it deletes all database data.
 
 ---
 

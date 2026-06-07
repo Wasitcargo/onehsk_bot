@@ -3,6 +3,12 @@ set -e
 
 echo "=== Alembic migration check ==="
 
+if [ "${RESET_DATABASE_ON_DEPLOY:-0}" = "1" ]; then
+    echo "RESET_DATABASE_ON_DEPLOY=1 detected."
+    echo "Dropping and recreating the public schema before migrations."
+    python -m scripts.reset_database_schema
+fi
+
 if ! CURRENT=$(alembic current 2>&1); then
     echo "Alembic current failed. Refusing to continue:"
     echo "$CURRENT"
