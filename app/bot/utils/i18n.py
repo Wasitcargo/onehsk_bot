@@ -21,7 +21,7 @@ TEXTS = {
         "menu_course_mode": "📚 Режими курс",
 
         "access_start_first": "Лутфан, аввал /start ро пахш кунед.",
-        "access_blocked": "<b>🚫 Профили шумо баста шудааст</b>\n\n<blockquote>Ба профили шумо дастрасӣ маҳдуд аст. Барои кӯмак ба техподдержка нависед:\n@akbarchina</blockquote>",
+        "access_blocked": "<b>🚫 Профили шумо баста шудааст</b>\n\n<blockquote>Ба профили шумо дастрасӣ маҳдуд аст. Барои кӯмак ба техподдержка нависед:\n<a href=\"tg://user?id=8494588423\">Mayls</a></blockquote>",
         "access_trial_expired": "<b>⏰ Мӯҳлати санҷишӣ ба поён расид</b>\n\n<blockquote>Барои идома додани омӯзиш обуна лозим аст.\nОбунаро расмӣ кунед ва бо тамоми имкониятҳо истифода баред.</blockquote>",
         "access_daily_limit_reached": "<b>📊 Лимити матни имрӯзаатон ба анҷом расид</b>\n\n<blockquote>Барои истифодаи бот бе ягон лимит обуна гиред.\n\nДӯстатонро даъват кунед ва +5 саволи бонусӣ гиред.\n+10 дӯст даъват кунед ва 3 рӯз дастрасии ройгон гиред.</blockquote>",
         "access_subscription_expired": "<b>💳 Муҳлати обунаи шумо ба анҷом расид</b>\n\n<blockquote>Барои идома аз нав обуна гиред.</blockquote>",
@@ -176,7 +176,7 @@ TEXTS = {
         "menu_course_mode": "📚 Режим курса",
 
         "access_start_first": "Пожалуйста, сначала нажмите /start.",
-        "access_blocked": "<b>🚫 Ваш профиль заблокирован</b>\n\n<blockquote>Доступ к профилю ограничен. Для помощи напишите в техподдержку:\n@akbarchina</blockquote>",
+        "access_blocked": "<b>🚫 Ваш профиль заблокирован</b>\n\n<blockquote>Доступ к профилю ограничен. Для помощи напишите в техподдержку:\n<a href=\"tg://user?id=8494588423\">Mayls</a></blockquote>",
         "access_trial_expired": "<b>⏰ Пробный период закончился</b>\n\n<blockquote>Для продолжения обучения необходима подписка.\nОформите подписку и пользуйтесь всеми возможностями.</blockquote>",
         "access_daily_limit_reached": "<b>📊 Ваш текстовый лимит на сегодня закончился</b>\n\n<blockquote>Оформите подписку, чтобы пользоваться ботом без ограничений.\n\nПригласите друга и получите +5 бонусных вопросов.\nПригласите +10 друзей и получите 3 дня бесплатного доступа.</blockquote>",
         "access_subscription_expired": "<b>💳 Срок вашей подписки закончился</b>\n\n<blockquote>Оформите подписку заново, чтобы продолжить.</blockquote>",
@@ -327,7 +327,7 @@ TEXTS = {
         "menu_course_mode": "📚 Kurs rejimi",
 
         "access_start_first": "Iltimos, avval /start ni bosing.",
-        "access_blocked": "<b>🚫 Profilingiz bloklangan</b>\n\n<blockquote>Profilingizga kirish cheklangan. Yordam uchun texnik yordamga yozing:\n@akbarchina</blockquote>",
+        "access_blocked": "<b>🚫 Profilingiz bloklangan</b>\n\n<blockquote>Profilingizga kirish cheklangan. Yordam uchun texnik yordamga yozing:\n<a href=\"tg://user?id=8494588423\">Mayls</a></blockquote>",
         "access_trial_expired": "<b>⏰ Sinov muddati tugadi</b>\n\n<blockquote>O’rganishni davom ettirish uchun obuna kerak.\nObuna rasmiylashtiring va barcha imkoniyatlardan foydalaning.</blockquote>",
         "access_daily_limit_reached": "<b>📊 Bugungi matn limitingiz tugadi</b>\n\n<blockquote>Botdan hech qanday limitlarsiz foydalanish uchun obuna oling.\n\nDo‘stingizni chaqirib +5 ta bonus savol oling.\n+10 do‘st chaqiring va 3 kun bepul foydalanish oling.</blockquote>",
         "access_subscription_expired": "<b>💳 Obuna muddatingiz tugadi</b>\n\n<blockquote>Davom etish uchun qaytadan obuna oling.</blockquote>",
@@ -531,7 +531,7 @@ COURSE_I18N = {
             "💬 /qa — саволу ҷавоб\n"
             "🎁 /invite — силкаи даъват</blockquote>\n\n"
             "⚠️ <b>Агар муаммо бошад, ба техподдержка нависед:</b>\n"
-            "@akbarchina"
+            "<a href=\"tg://user?id=8494588423\">Mayls</a>"
         ),
 
         "course_intro_title": "📘 Муқаддимаи дарс",
@@ -706,7 +706,7 @@ COURSE_I18N = {
             "💬 /qa — вопрос-ответ\n"
             "🎁 /invite — пригласительная ссылка</blockquote>\n\n"
             "⚠️ <b>Если возникнет проблема, напишите в техподдержку:</b>\n"
-            "@akbarchina"
+            "<a href=\"tg://user?id=8494588423\">Mayls</a>"
         ),
 
         "course_intro_title": "📘 Введение в урок",
@@ -881,7 +881,7 @@ COURSE_I18N = {
             "💬 /qa — savol-javob\n"
             "🎁 /invite — taklif havolasi</blockquote>\n\n"
             "⚠️ <b>Muammo bo‘lsa, tex yordam:</b>\n"
-            "@akbarchina"
+            "<a href=\"tg://user?id=8494588423\">Mayls</a>"
         ),
 
         "course_intro_title": "📘 Darsga kirish",
@@ -1188,7 +1188,7 @@ PARTNER_I18N = {
     "tj": {
         "partner_not_partner_text": (
             "<b>🤝 Барномаи ҳамкорӣ</b>\n\n"
-            "HSK AI-ро ба аудитория, дӯстон ё шиносҳои худ тавсия диҳед ва аз ҳар "
+            "onehsk-ро ба аудитория, дӯстон ё шиносҳои худ тавсия диҳед ва аз ҳар "
             "обунаи referral-и худ {commission_offer} даромад гиред. 💸\n\n"
             "🎁 Пас аз ҳамкор шудан, ба шумо {bonus} бонус дода мешавад.\n\n"
             "Бонус танҳо баъд аз аввалин пардохти ҳақиқии referral фаъол мегардад.\n\n"
@@ -1253,7 +1253,7 @@ PARTNER_I18N = {
     "ru": {
         "partner_not_partner_text": (
             "<b>🤝 Партнёрская программа</b>\n\n"
-            "Рекомендуйте HSK AI своей аудитории, друзьям или знакомым и получайте "
+            "Рекомендуйте onehsk своей аудитории, друзьям или знакомым и получайте "
             "{commission_offer} дохода с каждой referral-подписки. 💸\n\n"
             "🎁 После подключения партнёрства вы получите бонус {bonus}.\n\n"
             "Бонус активируется только после первой реальной оплаты referral-пользователя.\n\n"
@@ -1318,7 +1318,7 @@ PARTNER_I18N = {
     "uz": {
         "partner_not_partner_text": (
             "<b>🤝 Hamkorlik dasturi</b>\n\n"
-            "HSK AI'ni auditoriyangiz, do'stlaringiz yoki tanishlaringizga tavsiya qiling "
+            "onehsk'ni auditoriyangiz, do'stlaringiz yoki tanishlaringizga tavsiya qiling "
             "va har bir referral obunasidan {commission_offer} daromad oling. 💸\n\n"
             "🎁 Hamkor bo'lganingizdan keyin sizga {bonus} bonus beriladi.\n\n"
             "Bonus faqat referral'ning birinchi haqiqiy to'lovidan keyin faollashadi.\n\n"

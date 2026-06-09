@@ -494,7 +494,7 @@ async def _fill_channel_invite_link(message: Message, chat_id: str, invite_link:
     if invite_link:
         return invite_link
     try:
-        link = await message.bot.create_chat_invite_link(chat_id=chat_id, name="HSK AI required subscription")
+        link = await message.bot.create_chat_invite_link(chat_id=chat_id, name="onehsk required subscription")
         return link.invite_link
     except Exception:
         return None
